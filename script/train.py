@@ -518,14 +518,13 @@ def main(args):
         # Validate unofficial (train)
         validate_unofficial(args, train_loader, model, stats, mode='train')
 
+        # Validate unofficial (dev)
+        result = validate_unofficial(args, dev_loader, model, stats, mode='dev')
 
         # Validate official
         if args.official_eval:
             result = validate_official(args, dev_loader, model, stats,
                                        dev_offsets, dev_texts, dev_answers)
-        # Validate unofficial (dev)
-        else:
-            result = validate_unofficial(args, dev_loader, model, stats, mode='dev')
 
         # Save best valid
         if args.valid_metric is None or args.valid_metric == 'None':
