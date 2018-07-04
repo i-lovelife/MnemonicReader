@@ -34,6 +34,7 @@ logger = logging.getLogger()
 # Defaults
 DATA_DIR = os.path.join('data', 'datasets')
 MODEL_DIR = os.path.join('data', 'models')
+PRETRAINED_DIR = os.path.join('data', 'pretrained')
 EMBED_DIR = os.path.join('data', 'embeddings')
 
 def str2bool(v):
@@ -61,7 +62,7 @@ def add_train_args(parser):
                                'operations (for reproducibility)'))
     runtime.add_argument('--num-epochs', type=int, default=40,
                          help='Train data iterations')
-    runtime.add_argument('--batch-size', type=int, default=45,
+    runtime.add_argument('--batch-size', type=int, default=105,
                          help='Batch size for training')
     runtime.add_argument('--test-batch-size', type=int, default=32,
                          help='Batch size during validation/testing')
@@ -96,8 +97,10 @@ def add_train_args(parser):
     save_load = parser.add_argument_group('Saving/Loading')
     save_load.add_argument('--checkpoint', type='bool', default=False,
                            help='Save model + optimizer state after each epoch')
+    save_load.add_argument('--pretrained-dir', type=str, default=PRETRAINED_DIR,
+                           help='Dir of loading pretrained model to warm-start with')
     save_load.add_argument('--pretrained', type=str, default='',
-                           help='Path to a pretrained model to warm-start with')
+                           help='Name of a pretrained model in pretrained-dir')
     save_load.add_argument('--expand-dictionary', type='bool', default=False,
                            help='Expand dictionary of pretrained model to ' +
                                 'include training/dev words of new data')
@@ -142,6 +145,10 @@ def set_defaults(args):
         args.char_embedding_file = os.path.join(args.embed_dir, args.char_embedding_file)
         if not os.path.isfile(args.char_embedding_file):
             raise IOError('No such file: %s' % args.char_embedding_file)
+    if args.pretrained:
+        args.pretrained = os.path.join(args.pretrained_dir, args.pretrained)
+        if not os.path.isfile(args.pretrained):
+            raise IOError('No such file: %s' % args.pretrained)
 
     # Set model directory
     subprocess.call(['mkdir', '-p', args.model_dir])
@@ -535,6 +542,8 @@ def main(args):
                          stats['epoch'], model.updates))
             model.save(args.model_file)
             stats['best_valid'] = result[args.valid_metric]
+
+    logger.info('Best valid: %.2f' % (stats['best_valid']))
 
 
 if __name__ == '__main__':
