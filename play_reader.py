@@ -4,7 +4,7 @@
 #
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
-"""Implementation of the Mnemonic Reader."""
+"""Implementation of the Play Reader."""
 
 import torch
 import torch.nn as nn
@@ -18,11 +18,11 @@ from torch.autograd import Variable
 # ------------------------------------------------------------------------------
 
 
-class MnemonicReader(nn.Module):
+class PlayReader(nn.Module):
     RNN_TYPES = {'lstm': nn.LSTM, 'gru': nn.GRU, 'rnn': nn.RNN}
     CELL_TYPES = {'lstm': nn.LSTMCell, 'gru': nn.GRUCell, 'rnn': nn.RNNCell}
     def __init__(self, args, normalize=True):
-        super(MnemonicReader, self).__init__()
+        super(PlayReader, self).__init__()
         # Store config
         self.args = args
 
@@ -120,7 +120,6 @@ class MnemonicReader(nn.Module):
         x1_c_emb = self.char_embedding(x1_c)
         x2_c_emb = self.char_embedding(x2_c)
 
-        import pudb;pudb.set_trace()
         # Dropout on embeddings
         if self.args.dropout_emb > 0:
             x1_emb = F.dropout(x1_emb, p=self.args.dropout_emb, training=self.training)

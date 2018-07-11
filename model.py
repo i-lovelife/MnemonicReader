@@ -18,6 +18,7 @@ from config import override_model_args
 from r_net import R_Net
 from rnn_reader import RnnDocReader
 from m_reader import MnemonicReader
+from play_reader import PlayReader
 from data import Dictionary
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,8 @@ class DocReader(object):
             self.network = R_Net(args, normalize)
         elif args.model_type == 'mnemonic':
             self.network = MnemonicReader(args, normalize)
+        elif args.model_type == 'play':
+            self.network = PlayReader(args, normalize)
         else:
             raise RuntimeError('Unsupported model: %s' % args.model_type)
 
