@@ -101,6 +101,8 @@ def add_train_args(parser):
                            help='Dir of loading pretrained model to warm-start with')
     save_load.add_argument('--pretrained', type=str, default='',
                            help='Name of a pretrained model in pretrained-dir')
+    save_load.add_argument('--from-zero', type=bool, default=True,
+                           help='Wheather start from zero to train')
     save_load.add_argument('--expand-dictionary', type='bool', default=False,
                            help='Expand dictionary of pretrained model to ' +
                                 'include training/dev words of new data')
@@ -420,7 +422,7 @@ def main(args):
         # newly (randomly) initialized.
         if args.pretrained:
             logger.info('Using pretrained model...')
-            model = DocReader.load(args.pretrained, args)
+            model = DocReader.load(args.pretrained, args, from_zero=args.from_zero)
             if args.expand_dictionary:
                 logger.info('Expanding dictionary for new data...')
                 # Add words in training + dev examples

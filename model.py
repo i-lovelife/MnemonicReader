@@ -514,7 +514,7 @@ class DocReader(object):
             logger.warning('WARN: Saving failed... continuing anyway.')
 
     @staticmethod
-    def load(filename, new_args=None, normalize=True):
+    def load(filename, new_args=None, normalize=True, from_zero=False):
         logger.info('Loading model %s' % filename)
         saved_params = torch.load(
             filename, map_location=lambda storage, loc: storage
@@ -526,7 +526,7 @@ class DocReader(object):
             char_dict = Dictionary()
 
         feature_dict = saved_params['feature_dict']
-        state_dict = saved_params['state_dict']
+        state_dict = saved_params['state_dict'] if not from_zero else None
         args = saved_params['args']
         if new_args:
             args = override_model_args(args, new_args)
