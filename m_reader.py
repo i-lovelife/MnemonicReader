@@ -114,6 +114,7 @@ class MnemonicReader(nn.Module):
         x2_mask = question padding mask        [batch * len_q]
         """
         # Embed both document and question
+        #import pudb;pudb.set_trace()
         x1_emb = self.embedding(x1)
         x2_emb = self.embedding(x2)
         x1_c_emb = self.char_embedding(x1_c)

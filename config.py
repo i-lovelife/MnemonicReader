@@ -77,7 +77,7 @@ def add_model_args(parser):
     optim = parser.add_argument_group('Reader Optimization')
     optim.add_argument('--dropout-emb', type=float, default=0.2,
                        help='Dropout rate for word embeddings')
-    optim.add_argument('--dropout-rnn', type=float, default=0.2,
+    optim.add_argument('--dropout-rnn', type=float, default=0.3,
                        help='Dropout rate for RNN states')
     optim.add_argument('--dropout-rnn-output', type='bool', default=True,
                        help='Whether to dropout the RNN output')
