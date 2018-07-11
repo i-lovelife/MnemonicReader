@@ -109,8 +109,8 @@ class MnemonicReader(nn.Module):
         x1_f = document word features indices  [batch * len_d * nfeat]
         x1_mask = document padding mask        [batch * len_d]
         x2 = question word indices             [batch * len_q]
-        x2_c = document char indices           [batch * len_d]
-        x1_f = document word features indices  [batch * len_d * nfeat]
+        x2_c = question char indices           [batch * len_q]
+        x2_f = question word features indices  [batch * len_q * nfeat]
         x2_mask = question padding mask        [batch * len_q]
         """
         # Embed both document and question
@@ -141,15 +141,17 @@ class MnemonicReader(nn.Module):
             qrnn_input.append(x2_f)
 
         # Encode document with RNN
+        ## encoding_rnn input: [batch_size * max_len * (word_emb + char_emb + features)]
         c = self.encoding_rnn(torch.cat(crnn_input, 2), x1_mask)
+        ## c: batch_size * max_len * 2hidden_size
         
         # Encode question with RNN
         q = self.encoding_rnn(torch.cat(qrnn_input, 2), x2_mask)
 
         # Align and aggregate
-        c_check = c
+        c_check = c#[batch_size * max_len *2hidden_size]
         for i in range(self.args.hop):
-            q_tilde = self.interactive_aligners[i].forward(c_check, q, x2_mask)
+            q_tilde = self.interactive_aligners[i].forward(c_check, q, x2_mask)#[batch_size * max_len * 2hidden_size]
             c_bar = self.interactive_SFUs[i].forward(c_check, torch.cat([q_tilde, c_check * q_tilde, c_check - q_tilde], 2))
             c_tilde = self.self_aligners[i].forward(c_bar, x1_mask)
             c_hat = self.self_SFUs[i].forward(c_bar, torch.cat([c_tilde, c_bar * c_tilde, c_bar - c_tilde], 2))
