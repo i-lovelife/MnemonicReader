@@ -6,4 +6,4 @@ data/
 *.egg-info
 *.swp
 myenv/
-notebooks/
+*/.ipynb_checkpoints/
