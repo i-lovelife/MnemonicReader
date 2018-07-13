@@ -18,6 +18,23 @@ from torch.autograd import Variable
 # ------------------------------------------------------------------------------
 
 
+class CharCNN(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, padding):
+        super(CharCNN, self).__init__()
+        self.conv2d = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
+                padding=padding)
+        self.out_channels = out_channels
+    def forward(self, inputs):
+        """
+        Args: inputs [batch_size * seq_len * max_char * dim]
+        Returns: outputs [batch_size * seq_len * out_channels]
+        """
+        batch_size, seq_len, max_char, dim = inputs.size()
+        outputs = self.conv2d(inputs.view(-1, 1, max_char, dim))
+        outputs, _ = torch.max(outputs, dim=2)
+        outputs = outputs.view(batch_size, seq_len, self.out_channels)
+        return outputs
+
 class PlayReader(nn.Module):
     RNN_TYPES = {'lstm': nn.LSTM, 'gru': nn.GRU, 'rnn': nn.RNN}
     CELL_TYPES = {'lstm': nn.LSTMCell, 'gru': nn.GRUCell, 'rnn': nn.RNNCell}
@@ -46,6 +63,20 @@ class PlayReader(nn.Module):
             concat_layers=False,
             rnn_type=self.RNN_TYPES[args.rnn_type],
             padding=args.rnn_padding,
+        )
+        """
+        batch_size, seq_len, max_char, dim = 20, 40, 16, 100
+        inputs = torch.randn(batch_size, seq_len, max_char, dim)#batch_size * seq_len * max_char * dim
+        conv2d = nn.Conv2d(in_channels=1, out_channels=dim, kernel_size=(5, dim), padding=(2, 0))
+        outputs = conv2d(inputs.view(-1, 1, max_char, dim))
+        outputs, _ = torch.max(outputs, dim=2)
+        outputs = outputs.view(batch_size, seq_len, dim)
+        """
+        self.char_cnn = CharCNN(
+           in_channels=1,
+           out_channels=args.char_hidden_size * 2,
+           kernel_size=(5, args.char_embedding_dim),
+           padding=(5//2, 0)
         )
 
         doc_input_size = args.embedding_dim + args.char_hidden_size * 2 + args.num_features
@@ -90,7 +121,6 @@ class PlayReader(nn.Module):
                     padding=args.rnn_padding,
                 )
             )
-
         # Memmory-based Answer Pointer
         self.mem_ans_ptr = layers.MemoryAnsPointer(
             x_size=2*args.hidden_size, 
@@ -105,10 +135,10 @@ class PlayReader(nn.Module):
     def forward(self, x1, x1_c, x1_f, x1_mask, x2, x2_c, x2_f, x2_mask):
         """Inputs:
         x1 = document word indices             [batch * len_d]
-        x1_c = document char indices           [batch * len_d]
+        x1_c = document char indices           [batch * len_d * max_char_len]
         x1_f = document word features indices  [batch * len_d * nfeat]
         x1_mask = document padding mask        [batch * len_d]
-        x2 = question word indices             [batch * len_q]
+        x2 = question word indices             [batch * len_q * max_char_len]
         x2_c = document char indices           [batch * len_d]
         x1_f = document word features indices  [batch * len_d * nfeat]
         x2_mask = question padding mask        [batch * len_q]
@@ -128,12 +158,20 @@ class PlayReader(nn.Module):
             x2_c_emb = F.dropout(x2_c_emb, p=self.args.dropout_emb, training=self.training)
 
         # Generate char features
-        x1_c_features = self.char_rnn(x1_c_emb, x1_mask)
-        x2_c_features = self.char_rnn(x2_c_emb, x2_mask)
+        """
+        x1_c_emb = [batch * len_d * max_char * char_dim]
+        x1_mask = [batch * len_d]
+        x1_c_features = [batch * len_d * char_hidden_size]
+        """
+        x1_c_features = self.char_cnn(x1_c_emb)
+        x2_c_features = self.char_cnn(x2_c_emb)
 
+        crnn_input = [x1_emb]
+        qrnn_input = [x2_emb]
         # Combine input
-        crnn_input = [x1_emb, x1_c_features]
-        qrnn_input = [x2_emb, x2_c_features]
+        if self.args.use_char_feature:
+            crnn_input = [x1_emb, x1_c_features]
+            qrnn_input = [x2_emb, x2_c_features]
         # Add manual features
         if self.args.num_features > 0:
             crnn_input.append(x1_f)

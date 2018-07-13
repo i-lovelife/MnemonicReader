@@ -192,7 +192,14 @@ class PointerNetwork(nn.Module):
         self.cell = cell_type(x_size, y_size)
 
     def init_hiddens(self, y, y_mask):
-        attn = self.self_attn(y, y_mask)
+        """
+        Args:
+            y:[batch * len * dim]
+            y_mask:[batch * len]
+        Returns:
+            res:[batch * dim]
+        """
+        attn = self.self_attn(y, y_mask) #[batch * len]
         res = attn.unsqueeze(1).bmm(y).squeeze(1) # [B, I]
         return res
     
