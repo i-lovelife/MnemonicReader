@@ -1,0 +1,9 @@
+{
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/**": true,
+        "myenv/**":true,
+        "**/__pycacge__/**":true
+      }
+}
