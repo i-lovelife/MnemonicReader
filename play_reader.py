@@ -16,8 +16,6 @@ from torch.autograd import Variable
 # ------------------------------------------------------------------------------
 # Network
 # ------------------------------------------------------------------------------
-
-
 class CharCNN(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, padding):
         super(CharCNN, self).__init__()
