@@ -6,5 +6,7 @@
         "**/myenv/**":true,
         "**/__pycacge__/**":true
     },
-    "python.pythonPath": "${workspaceFolder}/myenv/bin/python"
+    "python.pythonPath": "${workspaceFolder}/myenv/bin/python",
+    "python.linting.enabled": false,
+    
 }
