@@ -120,7 +120,6 @@ class MnemonicReader(nn.Module):
         x1_c_emb = self.char_embedding(x1_c)
         x2_c_emb = self.char_embedding(x2_c)
 
-        import pudb;pudb.set_trace()
         # Dropout on embeddings
         if self.args.dropout_emb > 0:
             x1_emb = F.dropout(x1_emb, p=self.args.dropout_emb, training=self.training)

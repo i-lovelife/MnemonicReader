@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 MODEL_ARCHITECTURE = {
     'model_type', 'embedding_dim', 'char_embedding_dim', 'hidden_size', 'char_hidden_size',
     'doc_layers', 'question_layers', 'rnn_type', 'concat_rnn_layers', 'question_merge',
-    'use_qemb', 'use_exact_match', 'use_pos', 'use_ner', 'use_lemma', 'use_tf', 'hop'
+    'use_qemb', 'use_exact_match', 'use_pos', 'use_ner', 'use_lemma', 'use_tf', 'hop',
+    'full_char', 'max_char_len', 'use_char_feature'
 }
 
 # Index of arguments concerning the model optimizer/training
@@ -36,7 +37,7 @@ def add_model_args(parser):
     # Model architecture
     model = parser.add_argument_group('Reader Model Architecture')
     model.add_argument('--model-type', type=str, default='mnemonic',
-                       help='Model architecture type: rnn, r_net, mnemonic')
+                       help='Model architecture type: rnn, r_net, mnemonic, play')
     model.add_argument('--embedding-dim', type=int, default=300,
                        help='Embedding size if embedding_file is not given')
     model.add_argument('--char-embedding-dim', type=int, default=50,
@@ -52,6 +53,12 @@ def add_model_args(parser):
     model.add_argument('--rnn-type', type=str, default='lstm',
                        help='RNN type: LSTM, GRU, or RNN')
 
+    model.add_argument('--full-char', type='bool', default=True,
+                        help='Wheather use full char or not')
+    model.add_argument('--max-char-len', type=int, default=16,
+                        help='padded or truncte word to max_char_len')
+    model.add_argument('--use-char-feature', type='bool', default=True,
+                        help='wheather use char feature')
     # Model specific details
     detail = parser.add_argument_group('Reader Model Details')
     detail.add_argument('--concat-rnn-layers', type='bool', default=True,

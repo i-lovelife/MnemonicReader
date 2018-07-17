@@ -146,7 +146,14 @@ def load_chars(args, examples):
             if valid_chars and c not in valid_chars:
                 continue
             chars.add(c)
-
+    def _insertfull(iterable):
+        for w in iterable:
+            w = Dictionary.normalize(w)
+            for c in w:
+                c = Dictionary.normalize(c)
+                if valid_chars and c not in valid_chars:
+                    continue
+                chars.add(c)
     if args.restrict_vocab and args.char_embedding_file:
         logger.info('Restricting to chars in %s' % args.char_embedding_file)
         valid_chars = index_embedding_chars(args.char_embedding_file)
@@ -156,8 +163,12 @@ def load_chars(args, examples):
 
     chars = set()
     for ex in examples:
-        _insert(ex['question_char'])
-        _insert(ex['document_char'])
+        if args.full_char:
+            _insertfull(ex['question'])
+            _insertfull(ex['document'])
+        else:
+            _insert(ex['question_char'])
+            _insert(ex['document_char'])
     return chars
 
 def build_char_dict(args, examples):

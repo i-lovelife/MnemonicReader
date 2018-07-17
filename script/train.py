@@ -416,7 +416,7 @@ def main(args):
         # Just resume training, no modifications.
         logger.info('Found a checkpoint...')
         checkpoint_file = args.model_file + '.checkpoint'
-        model, start_epoch = DocReader.load_checkpoint(checkpoint_file, args)
+        model, start_epoch = DocReader.load_checkpoint(checkpoint_file)
     else:
         # Training starts fresh. But the model state is either pretrained or
         # newly (randomly) initialized.
@@ -424,6 +424,8 @@ def main(args):
             logger.info('Using pretrained model...')
             model = DocReader.load(args.pretrained, args, from_zero=args.from_zero)
             if args.expand_dictionary:
+                if args.full_char:
+                    raise NotImplementedError
                 logger.info('Expanding dictionary for new data...')
                 # Add words in training + dev examples
                 words = utils.load_words(args, train_exs + dev_exs)
@@ -488,7 +490,7 @@ def main(args):
         batch_size=args.batch_size,
         sampler=train_sampler,
         num_workers=args.data_workers,
-        collate_fn=vector.batchify,
+        collate_fn=vector.make_batchify_func(args),
         pin_memory=args.cuda,
     )
     dev_dataset = data.ReaderDataset(dev_exs, model, single_answer=False)
@@ -503,7 +505,7 @@ def main(args):
         batch_size=args.test_batch_size,
         sampler=dev_sampler,
         num_workers=args.data_workers,
-        collate_fn=vector.batchify,
+        collate_fn=vector.make_batchify_func(args),
         pin_memory=args.cuda,
     )
 
