@@ -51,6 +51,10 @@ def load_data(args, filename, skip_no_answer=False):
     # Skip unparsed (start/end) examples
     if skip_no_answer:
         examples = [ex for ex in examples if len(ex['answers']) > 0]
+    if args.max_example > 0:
+        import random
+        random.shuffle(examples)
+        examples = examples[:min(args.max_example, len(examples))]
     return examples
 
 

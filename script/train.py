@@ -125,10 +125,32 @@ def add_train_args(parser):
                          help='Log state after every <display_iter> epochs')
     general.add_argument('--sort-by-len', type='bool', default=True,
                          help='Sort batches by length for speed')
+    general.add_argument('--debug', type='bool', default=False,
+                         help='Debug mode')
+    general.add_argument('--max-example', type=int, default=-1,
+                         help='Max example use in dataset')
 
 
 def set_defaults(args):
     """Make sure the commandline arguments are initialized properly."""
+    # Set model name
+    if not args.model_name:
+        import uuid
+        import time
+        args.model_name = time.strftime("%Y%m%d-") + str(uuid.uuid4())[:8]
+    
+    # Set debug mode
+    if args.debug:
+        args.model_type = 'play'
+        args.model_name += '.debug'
+        args.pretrained = 'full_char.mdl'
+        args.from_zero = True
+        args.batch_size = 45
+
+    # Set charcter feature for different model
+    if args.model_type !='play':
+        args.full_char = False
+    
     # Check critical files exist
     args.dev_json = os.path.join(args.data_dir, args.dev_json)
     if not os.path.isfile(args.dev_json):
@@ -154,12 +176,6 @@ def set_defaults(args):
 
     # Set model directory
     subprocess.call(['mkdir', '-p', args.model_dir])
-
-    # Set model name
-    if not args.model_name:
-        import uuid
-        import time
-        args.model_name = time.strftime("%Y%m%d-") + str(uuid.uuid4())[:8]
 
     # Set log + model file names
     args.log_file = os.path.join(args.model_dir, args.model_name + '.txt')
@@ -519,7 +535,8 @@ def main(args):
     # TRAIN/VALID LOOP
     logger.info('-' * 100)
     logger.info('Starting training...')
-    stats = {'timer': utils.Timer(), 'epoch': 0, 'best_valid': 0}
+    stats = {'timer': utils.Timer(), 'epoch': 0, 'best_valid': 0, 'best_valid_epoch':-1, 'best_valid_updates':-1}
+    model.save(args.model_file)
     for epoch in range(start_epoch, args.num_epochs):
         stats['epoch'] = epoch
 
@@ -537,17 +554,16 @@ def main(args):
             result = validate_official(args, dev_loader, model, stats,
                                        dev_offsets, dev_texts, dev_answers)
 
-        # Save best valid
-        if args.valid_metric is None or args.valid_metric == 'None':
-            model.save(args.model_file)
-        elif result[args.valid_metric] > stats['best_valid']:
-            logger.info('Best valid: %s = %.2f (epoch %d, %d updates)' %
-                        (args.valid_metric, result[args.valid_metric],
-                         stats['epoch'], model.updates))
-            model.save(args.model_file)
+        # Save and report best valid
+        if result[args.valid_metric] > stats['best_valid']:
             stats['best_valid'] = result[args.valid_metric]
-
-    logger.info('Best valid: %.2f' % (stats['best_valid']))
+            stats['best_valid_epoch'] = stats['epoch']
+            stats['best_valid_updates'] = model.updates
+            logger.info('Find better answer %.2f' % stats['best_valid'])
+            model.save(args.model_file)
+        logger.info('Best valid: %s = %.2f (epoch %d, %d updates)' %
+                    (args.valid_metric, stats['best_valid'],
+                     stats['best_valid_epoch'], stats['best_valid_updates']))
 
 
 if __name__ == '__main__':

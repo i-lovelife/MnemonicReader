@@ -57,10 +57,10 @@ class PlayReader(nn.Module):
         self.char_rnn = layers.StackedBRNN(
             input_size=args.char_embedding_dim,
             hidden_size=args.char_hidden_size,
-            num_layers=1,
+            num_layers=2,
             dropout_rate=args.dropout_rnn,
             dropout_output=args.dropout_rnn_output,
-            concat_layers=False,
+            concat_layers=True,
             rnn_type=self.RNN_TYPES[args.rnn_type],
             padding=args.rnn_padding,
         )

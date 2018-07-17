@@ -495,6 +495,7 @@ class DocReader(object):
         }
         try:
             torch.save(params, filename)
+            logging.info('model saved to {}'.format(filename))
         except BaseException:
             logger.warning('WARN: Saving failed... continuing anyway.')
 
