@@ -4,7 +4,8 @@
         "**/.git/subtree-cache/**": true,
         "**/node_modules/**": true,
         "**/myenv/**":true,
-        "**/__pycacge__/**":true
+        "**/__pycacge__/**":true,
+        "**/data/**":true
     },
     "python.pythonPath": "${workspaceFolder}/myenv/bin/python",
     "python.linting.enabled": false,

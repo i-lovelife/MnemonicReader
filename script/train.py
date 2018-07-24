@@ -62,7 +62,7 @@ def add_train_args(parser):
                                'operations (for reproducibility)'))
     runtime.add_argument('--num-epochs', type=int, default=40,
                          help='Train data iterations')
-    runtime.add_argument('--batch-size', type=int, default=105,
+    runtime.add_argument('--batch-size', type=int, default=70,
                          help='Batch size for training')
     runtime.add_argument('--test-batch-size', type=int, default=32,
                          help='Batch size during validation/testing')
@@ -145,7 +145,8 @@ def set_defaults(args):
         args.model_name += '.debug'
         args.pretrained = 'full_char.mdl'
         args.from_zero = True
-        args.batch_size = 45
+        args.batch_size = 2
+        args.num_epochs = 1
 
     # Set charcter feature for different model
     if args.model_type !='play':

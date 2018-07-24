@@ -46,38 +46,7 @@ class PlayReader(nn.Module):
                                       args.embedding_dim,
                                       padding_idx=0)
 
-        # Char embeddings (+1 for padding)
-        self.char_embedding = nn.Embedding(args.char_size,
-                                      args.char_embedding_dim,
-                                      padding_idx=0)
-
-        # Char rnn to generate char features
-        self.char_rnn = layers.StackedBRNN(
-            input_size=args.char_embedding_dim,
-            hidden_size=args.char_hidden_size,
-            num_layers=2,
-            dropout_rate=args.dropout_rnn,
-            dropout_output=args.dropout_rnn_output,
-            concat_layers=True,
-            rnn_type=self.RNN_TYPES[args.rnn_type],
-            padding=args.rnn_padding,
-        )
-        """
-        batch_size, seq_len, max_char, dim = 20, 40, 16, 100
-        inputs = torch.randn(batch_size, seq_len, max_char, dim)#batch_size * seq_len * max_char * dim
-        conv2d = nn.Conv2d(in_channels=1, out_channels=dim, kernel_size=(5, dim), padding=(2, 0))
-        outputs = conv2d(inputs.view(-1, 1, max_char, dim))
-        outputs, _ = torch.max(outputs, dim=2)
-        outputs = outputs.view(batch_size, seq_len, dim)
-        """
-        self.char_cnn = CharCNN(
-           in_channels=1,
-           out_channels=args.char_hidden_size * 2,
-           kernel_size=(5, args.char_embedding_dim),
-           padding=(5//2, 0)
-        )
-
-        doc_input_size = args.embedding_dim + args.char_hidden_size * 2 + args.num_features
+        doc_input_size = args.embedding_dim + args.num_features
 
         # Encoder
         self.encoding_rnn = layers.StackedBRNN(
@@ -145,31 +114,13 @@ class PlayReader(nn.Module):
         #import pudb;pudb.set_trace()
         x1_emb = self.embedding(x1)
         x2_emb = self.embedding(x2)
-        x1_c_emb = self.char_embedding(x1_c)
-        x2_c_emb = self.char_embedding(x2_c)
-
         # Dropout on embeddings
         if self.args.dropout_emb > 0:
             x1_emb = F.dropout(x1_emb, p=self.args.dropout_emb, training=self.training)
             x2_emb = F.dropout(x2_emb, p=self.args.dropout_emb, training=self.training)
-            x1_c_emb = F.dropout(x1_c_emb, p=self.args.dropout_emb, training=self.training)
-            x2_c_emb = F.dropout(x2_c_emb, p=self.args.dropout_emb, training=self.training)
-
-        # Generate char features
-        """
-        x1_c_emb = [batch * len_d * max_char * char_dim]
-        x1_mask = [batch * len_d]
-        x1_c_features = [batch * len_d * char_hidden_size]
-        """
-        x1_c_features = self.char_cnn(x1_c_emb)
-        x2_c_features = self.char_cnn(x2_c_emb)
 
         crnn_input = [x1_emb]
         qrnn_input = [x2_emb]
-        # Combine input
-        if self.args.use_char_feature:
-            crnn_input = [x1_emb, x1_c_features]
-            qrnn_input = [x2_emb, x2_c_features]
         # Add manual features
         if self.args.num_features > 0:
             crnn_input.append(x1_f)
